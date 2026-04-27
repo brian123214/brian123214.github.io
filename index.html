@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Narnia Chapters | The Lion, the Witch and the Wardrobe</title>
+    <meta
+      name="description"
+      content="Interactive chapter map and panorama viewer for The Lion, the Witch and the Wardrobe."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>The Lion, the Witch and the Wardrobe</h1>
+      <p>
+        Explore Narnia chapter by chapter. Select a chapter marker on the map,
+        then enter to view panoramic scenes.
+      </p>
+    </header>
+
+    <main>
+      <section class="map-layout" id="map-layout">
+        <aside class="chapter-panel" aria-labelledby="chapters-heading">
+          <h2 id="chapters-heading">Chapters</h2>
+          <ol id="chapter-list" class="chapter-list"></ol>
+        </aside>
+
+        <section class="map-panel" aria-labelledby="map-heading">
+          <h2 id="map-heading">Map of Narnia</h2>
+          <p class="panel-help">Click a marker to choose a chapter.</p>
+
+          <div id="map" class="map" role="img" aria-label="Illustrated map with chapter markers"></div>
+
+          <div class="selection" id="chapter-selection">
+            <h3 id="selected-chapter-title">Select a chapter</h3>
+            <p id="selected-chapter-description">
+              Choose any chapter marker to open its panorama scenes.
+            </p>
+            <button id="enter-chapter-btn" class="btn" disabled>Enter Chapter</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="viewer-section" class="viewer-section hidden" aria-live="polite">
+        <div class="viewer-header">
+          <div>
+            <h2 id="viewer-chapter-title">Chapter</h2>
+            <p id="viewer-scene-title">Scene</p>
+          </div>
+
+          <div class="viewer-actions">
+            <button id="back-to-map-btn" class="btn btn-outline">Back to Map</button>
+          </div>
+        </div>
+
+        <div class="viewer-wrap">
+          <button id="prev-scene-btn" class="nav-arrow" aria-label="Previous panorama scene">
+            ◀
+          </button>
+          <div id="panorama-viewer" class="panorama-viewer"></div>
+          <button id="next-scene-btn" class="nav-arrow" aria-label="Next panorama scene">
+            ▶
+          </button>
+        </div>
+
+        <div class="scene-footer">
+          <span id="scene-counter">Scene 1 / 1</span>
+        </div>
+      </section>
+    </main>
+
+    <noscript>
+      <p class="noscript-msg">
+        This site needs JavaScript enabled to display the chapter map and panorama viewer.
+      </p>
+    </noscript>
+
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
