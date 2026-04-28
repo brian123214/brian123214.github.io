@@ -41,15 +41,23 @@
         <section class="map-panel" aria-labelledby="map-heading">
           <h2 id="map-heading">Map of Narnia</h2>
           <p class="panel-help">Click a marker to choose a chapter.</p>
+          <div class="map-tools" aria-label="Map zoom controls">
+            <button id="zoom-out-btn" class="btn btn-map" type="button">-</button>
+            <span id="zoom-level-label" class="zoom-level">100%</span>
+            <button id="zoom-in-btn" class="btn btn-map" type="button">+</button>
+            <button id="reset-map-btn" class="btn btn-outline btn-map-reset" type="button">Reset</button>
+          </div>
 
-          <div id="map" class="map" role="img" aria-label="Illustrated map with chapter markers"></div>
+          <div id="map" class="map" role="img" aria-label="Illustrated map with chapter markers">
+            <div id="map-canvas" class="map-canvas"></div>
+          </div>
 
           <div class="selection" id="chapter-selection">
             <h3 id="selected-chapter-title">Select a chapter</h3>
             <p id="selected-chapter-description">
               Choose any chapter marker to open its panorama scenes.
             </p>
-            <button id="enter-chapter-btn" class="btn" disabled>Enter Chapter</button>
+            <button id="enter-chapter-btn" class="btn" disabled>Chapter view</button>
           </div>
         </section>
       </section>

@@ -81,7 +81,8 @@ main {
 
 .chapter-list {
   margin: 0;
-  padding-left: 1.25rem;
+  padding-left: 0;
+  list-style: none;
   display: grid;
   gap: 0.35rem;
   max-height: 570px;
@@ -104,24 +105,50 @@ main {
   margin-top: -0.2rem;
 }
 
+.map-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.btn-map {
+  min-width: 38px;
+  padding: 0.35rem 0.65rem;
+}
+
+.btn-map-reset {
+  margin-left: 0.2rem;
+}
+
+.zoom-level {
+  min-width: 55px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .map {
   position: relative;
   min-height: min(64vw, 590px);
   border: 2px solid rgba(74, 48, 18, 0.6);
   border-radius: 14px;
-  background:
-    radial-gradient(circle at 30% 28%, rgba(65, 104, 75, 0.28), transparent 38%),
-    radial-gradient(circle at 75% 70%, rgba(120, 77, 37, 0.21), transparent 35%),
-    radial-gradient(circle at 60% 24%, rgba(160, 190, 217, 0.38), transparent 28%),
-    repeating-linear-gradient(
-      128deg,
-      rgba(92, 64, 31, 0.08),
-      rgba(92, 64, 31, 0.08) 8px,
-      transparent 8px,
-      transparent 16px
-    ),
-    linear-gradient(140deg, #e4c793, #d4b380 55%, #b7915d);
   overflow: hidden;
+  cursor: grab;
+}
+
+.map:active {
+  cursor: grabbing;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  background-image: linear-gradient(rgba(20, 15, 8, 0.12), rgba(20, 15, 8, 0.12)), url("assets/NarniaMap.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .map::before {
@@ -137,22 +164,28 @@ main {
 
 .chapter-marker {
   position: absolute;
-  transform: translate(-50%, -50%);
-  width: 34px;
-  height: 34px;
+  transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  border: 2px solid #fff8e4;
+  border: 1.5px solid #fff8e4;
   background: radial-gradient(circle at 35% 30%, #d68e38, #8e4f1f 80%);
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.58rem;
+  line-height: 1;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+  font-variant-numeric: tabular-nums;
 }
 
 .chapter-marker:hover,
 .chapter-marker.active {
-  outline: 3px solid rgba(255, 244, 194, 0.8);
+  outline: 2px solid rgba(255, 244, 194, 0.85);
   z-index: 2;
 }
 

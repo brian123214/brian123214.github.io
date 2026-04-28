@@ -25,32 +25,19 @@ const markerPositions = [
   [46.78, 44.77], [45.61, 46.86], [42.29, 56.04], [62.43, 43.46], [64.94, 51.18], [69.89, 51.10], [39.56, 16.83], [77.10, 40.45],
 ];
 
+const chapterImageCache = new Map();
+
 const chapterData = chapterTitles.map((title, index) => {
   const chapterNumber = index + 1;
   return {
     id: chapterNumber,
     title,
-    description: `Chapter ${chapterNumber} mock scenes. Replace these with real panoramas in panorama/chapter${chapterNumber}/ when ready.`,
+    description: `Chapter ${chapterNumber} panorama scenes.`,
     marker: {
       x: markerPositions[index][0],
       y: markerPositions[index][1],
     },
-    scenes: [
-      {
-        title: `Chapter ${chapterNumber}: Scene A`,
-        image: sampleImagePath,
-        pitch: 2,
-        yaw: 145,
-        hfov: 112,
-      },
-      {
-        title: `Chapter ${chapterNumber}: Scene B`,
-        image: sampleImagePath,
-        pitch: 0,
-        yaw: 20,
-        hfov: 105,
-      },
-    ],
+    scenes: [],
   };
 });
 
@@ -60,6 +47,11 @@ let viewer = null;
 
 const chapterListEl = document.getElementById("chapter-list");
 const mapEl = document.getElementById("map");
+const mapCanvasEl = document.getElementById("map-canvas");
+const zoomInBtn = document.getElementById("zoom-in-btn");
+const zoomOutBtn = document.getElementById("zoom-out-btn");
+const resetMapBtn = document.getElementById("reset-map-btn");
+const zoomLevelLabel = document.getElementById("zoom-level-label");
 const selectedTitleEl = document.getElementById("selected-chapter-title");
 const selectedDescEl = document.getElementById("selected-chapter-description");
 const enterChapterBtn = document.getElementById("enter-chapter-btn");
@@ -72,8 +64,76 @@ const prevSceneBtn = document.getElementById("prev-scene-btn");
 const nextSceneBtn = document.getElementById("next-scene-btn");
 const backToMapBtn = document.getElementById("back-to-map-btn");
 
+let mapScale = 1;
+let mapOffsetX = 0;
+let mapOffsetY = 0;
+let isDraggingMap = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let mapStartOffsetX = 0;
+let mapStartOffsetY = 0;
+
 function imageUrl(path) {
   return encodeURI(path);
+}
+
+function updateMapTransform() {
+  mapCanvasEl.style.transform = `translate(${mapOffsetX}px, ${mapOffsetY}px) scale(${mapScale})`;
+  mapCanvasEl.style.setProperty("--marker-scale", `${1 / mapScale}`);
+  zoomLevelLabel.textContent = `${Math.round(mapScale * 100)}%`;
+}
+
+function setMapScale(nextScale) {
+  mapScale = Math.min(3, Math.max(1, nextScale));
+  if (mapScale === 1) {
+    mapOffsetX = 0;
+    mapOffsetY = 0;
+  }
+  updateMapTransform();
+}
+
+function initMapInteraction() {
+  updateMapTransform();
+
+  zoomInBtn.addEventListener("click", () => setMapScale(mapScale + 0.2));
+  zoomOutBtn.addEventListener("click", () => setMapScale(mapScale - 0.2));
+  resetMapBtn.addEventListener("click", () => {
+    mapScale = 1;
+    mapOffsetX = 0;
+    mapOffsetY = 0;
+    updateMapTransform();
+  });
+
+  mapEl.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const delta = event.deltaY < 0 ? 0.12 : -0.12;
+    setMapScale(mapScale + delta);
+  });
+
+  mapEl.addEventListener("pointerdown", (event) => {
+    if (mapScale <= 1) return;
+    isDraggingMap = true;
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
+    mapStartOffsetX = mapOffsetX;
+    mapStartOffsetY = mapOffsetY;
+    mapEl.setPointerCapture(event.pointerId);
+  });
+
+  mapEl.addEventListener("pointermove", (event) => {
+    if (!isDraggingMap) return;
+    mapOffsetX = mapStartOffsetX + (event.clientX - dragStartX);
+    mapOffsetY = mapStartOffsetY + (event.clientY - dragStartY);
+    updateMapTransform();
+  });
+
+  mapEl.addEventListener("pointerup", () => {
+    isDraggingMap = false;
+  });
+
+  mapEl.addEventListener("pointercancel", () => {
+    isDraggingMap = false;
+  });
 }
 
 function buildMapAndList() {
@@ -93,7 +153,7 @@ function buildMapAndList() {
     marker.dataset.chapterId = String(chapter.id);
     marker.setAttribute("aria-label", `Chapter ${chapter.id}: ${chapter.title}`);
     marker.addEventListener("click", () => selectChapter(chapter.id));
-    mapEl.appendChild(marker);
+    mapCanvasEl.appendChild(marker);
   });
 }
 
@@ -134,6 +194,63 @@ function chapterToViewerConfig(chapter) {
   };
 }
 
+async function fileExists(path) {
+  try {
+    const response = await fetch(imageUrl(path), { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveChapterImage(chapterNumber) {
+  if (chapterImageCache.has(chapterNumber)) {
+    return chapterImageCache.get(chapterNumber);
+  }
+
+  const candidates = [
+    `panorama/${chapterNumber}.png`,
+    `panorama/${chapterNumber}.jpg`,
+    `panorama/${chapterNumber}.jpeg`,
+    `panorama/chapter${chapterNumber}/${chapterNumber}.png`,
+    `panorama/chapter${chapterNumber}/${chapterNumber}.jpg`,
+    `panorama/chapter${chapterNumber}/${chapterNumber}.jpeg`,
+    `panorama/chapter1/${chapterNumber}.png`,
+    `panorama/chapter1/${chapterNumber}.jpg`,
+    `panorama/chapter1/${chapterNumber}.jpeg`,
+  ];
+
+  for (const candidate of candidates) {
+    // eslint-disable-next-line no-await-in-loop
+    if (await fileExists(candidate)) {
+      chapterImageCache.set(chapterNumber, candidate);
+      return candidate;
+    }
+  }
+
+  chapterImageCache.set(chapterNumber, sampleImagePath);
+  return sampleImagePath;
+}
+
+async function buildScenesForChapter(chapter) {
+  const chapterImage = await resolveChapterImage(chapter.id);
+  const isFallback = chapterImage === sampleImagePath;
+
+  chapter.description = isFallback
+    ? `Chapter ${chapter.id} does not have ${chapter.id}.png yet. Showing fallback image.`
+    : `Chapter ${chapter.id} loaded from ${chapterImage}.`;
+
+  chapter.scenes = [
+    {
+      title: `Chapter ${chapter.id}: Main Scene`,
+      image: chapterImage,
+      pitch: 0,
+      yaw: 0,
+      hfov: 110,
+    },
+  ];
+}
+
 function updateViewerUI() {
   if (!selectedChapter) return;
 
@@ -148,8 +265,11 @@ function updateViewerUI() {
   nextSceneBtn.disabled = currentSceneIndex === total - 1;
 }
 
-function openChapterViewer() {
+async function openChapterViewer() {
   if (!selectedChapter) return;
+
+  await buildScenesForChapter(selectedChapter);
+  selectedDescEl.textContent = selectedChapter.description;
 
   currentSceneIndex = 0;
 
@@ -192,4 +312,5 @@ nextSceneBtn.addEventListener("click", () => goToScene(currentSceneIndex + 1));
 backToMapBtn.addEventListener("click", closeViewer);
 
 buildMapAndList();
+initMapInteraction();
 selectChapter(1);
